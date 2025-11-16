@@ -1,316 +1,172 @@
-Below is a complete, professional, end-to-end specification for your Mobile-Only QCM Simulator SPA, written in English, structured exactly as a software requirements document — ready for development.
+📘 QCM Simulator – Mobile SPA
 
-This specification is tailored to your JSON exam format, your user flows, and mobile constraints.
+A modern, mobile-only Single Page Application (SPA) for practicing QCM (multiple-choice medical exam questions).
+Built with HTML, JavaScript, TailwindCSS, and IndexedDB (via Dexie.js) for local storage.
 
-📘 QCM Simulator – Detailed Specifications (Mobile-Only SPA)
+🚀 Features
+✔ JSON Exam Upload
 
-Technologies: HTML, JavaScript, TailwindCSS, Local Filestore (IndexedDB or LocalStorage)
-Target device: Mobile
-Type: Single Page Application (SPA)
-Design: Modern, clean, responsive, smooth animations, toast notifications
+Create new exams by uploading a JSON file
 
-1. Purpose
+Assign a custom name
 
-The purpose of this SPA is to allow users to:
+Local validation of exam structure
 
-Upload JSON files containing QCM questions
+Supports large QCM exam files
 
-Create and store multiple exams locally
+✔ Local Exam Management
 
-Take QCM exams on mobile with progress tracking
+All exams are stored locally using IndexedDB
 
-View corrections immediately after answering
+Rename, delete, and browse exams
 
-Mark questions to review later
+No internet required
 
-See final score and AI-generated explanations
+No backend required
 
-Provide a lightweight, offline-capable QCM practice tool
+Data persists across browser sessions
 
-2. Data Specification
-2.1. One question entry
+✔ Exam Experience
 
-Each entry in the JSON file represents one question:
+Full-screen, mobile-first design
 
-{
-  "category": "QCM",
-  "drug": "n/a",
-  "stem": "fémorale avec un fragment osseux faisant saillie à travers une plaie irrégulière. Quelle est la meilleure conduite à tenir",
-  "options": [
+One question per screen
+
+Multiple large option buttons for mobile usability
+
+Show correction immediately after selecting an answer
+
+Prevent moving to the next question until correction is viewed
+
+Bookmark questions during the exam
+
+Track exam progress in real-time
+
+Final score summary
+
+Review all questions after finishing
+
+Review marked questions only
+
+✔ AI Answer Explanation (optional)
+
+Ask AI to explain the correct answer
+
+Sends the question + correct answer to a backend or API
+
+Modal UI for explanation feedback
+
+✔ User Interface
+
+Modern TailwindCSS design
+
+Smooth animations
+
+Toast notifications
+
+Mobile SPA Routing (hash-based)
+
+📂 JSON Exam Format
+
+Each exam file is a JSON array:
+
+[
+  {
+    "category": "QCM",
+    "drug": "n/a",
+    "stem": "fémorale avec un fragment osseux faisant saillie à travers une plaie irrégulière. Quelle est la meilleure conduite à tenir",
+    "options": [
       "Réduction fermée et plâtre long uniquement",
       "Rappel antitétanique uniquement ; suivi ambulatoire",
       "Traction squelettique pendant 24 à 48 heures, puis sortie",
       "Antibiothérapie intraveineuse immédiate et irrigation/débridement chirurgical urgent",
       "Reporter l'intervention chirurgicale jusqu'à la résorption de l'œdème.",
       "n/a"
-  ],
-  "answerIndex": 3
-}
+    ],
+    "answerIndex": 3
+  }
+]
 
-Rules
+Requirements:
 
-options always contains 6 items
+Each question must have exactly 6 options
 
-missing options replaced with "n/a"
+Missing options must be "n/a"
 
-answerIndex contains only ONE correct answer index
+Only one correct answer, given by answerIndex
 
 stem is the question text
 
-category and drug are optional metadata for the UI
+category and drug are optional metadata
 
-2.2. Exam file format
+💾 Local Database (IndexedDB + Dexie.js)
 
-A JSON exam file contains an array of questions:
+The app stores everything locally on the user's device.
+No backend is required.
 
-[
-  { ...question1... },
-  { ...question2... },
-  ...
-]
+📦 Database Structure
+Database name:
+QCMDatabase
 
-2.3. Stored exam metadata
+Dexie.js schema:
+const db = new Dexie("QCMDatabase");
 
-Stored separately from questions:
+db.version(1).stores({
+    exams: "id, name, createdAt, updatedAt, questionCount",
+    questions: "id, examId"
+});
 
-{
-  "id": "uuid",
-  "name": "Trauma Exam",
-  "createdAt": "timestamp",
-  "updatedAt": "timestamp",
-  "questionCount": 120,
-  "fileName": "qcm_block_1.json"
-}
+🗂 Table: exams
 
-3. Storage Architecture
+Stores metadata for each exam uploaded by the user.
 
-Use browser filestore:
+Field	Type	Description
+id	string (uuid)	Unique ID for exam
+name	string	User-defined name
+createdAt	number (timestamp)	Creation date
+updatedAt	number (timestamp)	Last update
+questionCount	number	Number of questions in exam
+fileName	string	Original JSON filename
+🗂 Table: questions
 
-Option 1 — IndexedDB (recommended)
+Stores questions for each exam.
 
-For exam metadata table
+Field	Type	Description
+id	string (uuid)	Question UID
+examId	string	Foreign key to exam
+stem	string	Question text
+options	array[string]	Always 6 options
+answerIndex	number	Correct option index
+category	string	Optional
+drug	string	Optional
+🧠 Why IndexedDB + Dexie.js?
+✔ Works offline
+✔ Supports large JSON exam files
+✔ Fast and persistent
+✔ Automatically works on deployed version
+✔ No server required
+✔ Perfect for mobile SPAs
+✔ Zero backend cost
+🧭 App Architecture (SPA)
+Pages (internal SPA routes):
 
-For exam questions table
+#/exams → List of exams
 
-Supports large files
+#/exam/:id → Take exam
 
-Fast indexed lookups
+#/review/:id → Review mode
 
-Option 2 — LocalStorage
+#/marked/:id → Marked questions
 
-Simpler but limited (5 MB)
+#/import → Upload exam
 
-For metadata only
+#/score/:id → Final score
 
-Questions stored as stringified JSON
+No page reloads.
+All navigation is handled via JavaScript.
 
-👉 Use IndexedDB for enterprise-level reliability.
-
-4. App Architecture (SPA)
-Pages (all in SPA):
-
-Home / Dashboard
-
-Exam List
-
-Exam Import (Upload JSON)
-
-Exam Rename / Delete modals
-
-Exam Taking page
-
-Question Review page (after exam)
-
-Marked Questions page
-
-Final Score page
-
-Settings (AI explanation etc.)
-
-All pages implemented inside a single index.html using JS routing.
-
-5. Features (Detailed)
-5.1. Create a New Exam
-
-User selects a .json file
-
-App reads file via FileReader API
-
-Validate structure:
-
-Must be an array
-
-Each entry must include stem, options, answerIndex
-
-User enters exam name
-
-Save exam JSON to IndexedDB
-
-Save metadata record
-
-Show toast:
-“Exam successfully created 🎉”
-
-5.2. View All Exams
-
-List includes:
-
-Exam name
-
-Number of questions
-
-Created date
-
-3-dot menu:
-
-Rename
-
-Delete
-
-Start Exam
-
-Modern card layout with TailwindCSS.
-
-5.3. Rename Exam
-
-Inline modal
-
-Update metadata
-
-Toast:
-“Exam renamed successfully.”
-
-5.4. Delete Exam
-
-Confirmation modal
-
-Remove both metadata and question store
-
-Toast:
-“Exam removed.”
-
-5.5. Start Exam
-
-Exam page displays:
-
-Header:
-
-Exam name
-
-Progress (e.g., “Question 5 / 50”)
-
-Timer (optional)
-
-Bookmark/Mark button (⭐)
-
-Body:
-
-Question stem
-
-Options as large buttons (mobile-friendly)
-
-Disable after choosing one
-
-Highlight correct answer in green
-
-Highlight wrong choice in red
-
-Footer:
-
-“Next Question” button (locked until answer is chosen)
-
-“View Explanation using AI” button
-
-5.6. Answer Checking
-
-When user selects an option:
-
-✔ Correct answer → show green state
-❌ Wrong answer → show red + highlight correct one
-
-Toast-style optional feedback:
-
-“Correct!”
-
-“Incorrect, correct answer is D”
-
-5.7. Show Correction Before Moving Next
-
-User must confirm:
-➡️ “Next Question”
-
-This enforces learning before continuing.
-
-5.8. Exam Progress Tracking
-
-A progress bar:
-
-currentIndex / totalQuestions
-
-Animated Tailwind progress bar
-
-5.9. Question Marking (Flagging)
-
-User can tap ⭐ to mark a question:
-
-Store question index in metadata during exam session
-
-List available after exam in “Marked Questions”
-
-State stored in:
-
-{
-  "marked": [3, 10, 17]
-}
-
-5.10. Final Score Page
-
-Display:
-
-Score: “34 / 50”
-
-Percentage
-
-Time taken
-
-Number of marked questions
-
-Buttons:
-
-Review All Questions
-
-Review Marked Questions Only
-
-Restart Exam
-
-5.11. AI Explanation Feature
-
-(Using backend or browser-based LLM)
-
-On a question page, after answering:
-
-Button:
-“Explain the correct answer 🤖”
-
-The request sent:
-
-{
-  "stem": "...",
-  "options": [...],
-  "correctIndex": 3
-}
-
-
-Response displayed in a modal:
-
-Explanation paragraph
-
-Optional reference links
-
-6. Component Breakdown
-Components:
-
-Navbar
+🖥 UI Components
+Core components:
 
 ExamCard
 
@@ -320,120 +176,66 @@ OptionButton
 
 ProgressBar
 
-MarkedBadge
-
-ScoreCard
+MarkQuestionButton
 
 ToastComponent
 
-ModalComponent
+ScoreCard
 
-FloatingActionButtons
+ModalComponent
 
 AIExplanationModal
 
-7. UI/UX Requirements
-General:
+Tailwind utility classes used for styling.
 
-Mobile-first
+🔔 Toast Notifications
 
-1 column layout
+Global toast API:
 
-Rounded cards
+toast.success("Exam created!");
+toast.error("Invalid JSON file.");
+toast.info("Question marked!");
 
-Soft shadows
+🎯 User Flow Summary
 
-Vibrant colors
+Upload JSON → create exam
 
-Animated transitions (Tailwind + JS)
+Start exam
 
-Typography:
+Answer → see correction
 
-Use Inter or Poppins
+Navigate to next question
 
-Large question text
+Mark questions while answering
 
-Big touch-friendly buttons
+Finish exam → see score
 
-Navigation:
+Review full exam or marked questions
 
-No page reload
+Request AI explanation (optional)
 
-simple hash-based routing:
+🌐 Deployment
 
-#/exams
+SPA can be deployed easily on:
 
-#/exam/:id
+GitHub Pages
 
-#/results/:id
+Netlify
 
-8. Toast Notifications
+Vercel
 
-Examples:
+No server required unless using AI explanations.
 
-success("Exam created successfully!")
+🎁 Optional Add-Ons
 
-error("Invalid JSON file")
+Timer mode
 
-warning("You must answer before moving on.")
+Randomized order
 
-info("Question marked for review.")
+Difficulty filters
 
-9. Validation Rules
-For file upload:
+Dark mode
 
-JSON must parse
+History of exam results
 
-Must be array
-
-Each question must contain:
-
-stem
-
-options
-
-answerIndex
-
-Option constraints:
-
-Always 6 items
-
-If missing → auto pad "n/a"
-
-10. Performance
-
-All data saved locally for instant access
-
-Exam runs offline after initial upload
-
-Minimal bundle size, no build tools required
-
-11. Security
-
-No backend required
-
-No user-sensitive data
-
-Optional: AI explanation via backend (user decides)
-
-12. Future Features (Optional)
-
-Category filtering
-
-Timed exams
-
-Exam difficulty levels
-
-Color themes (dark mode)
-
-Export score history
-
-✅ Ready to Generate the Code?
-
-If you want, I can now generate:
-
-✔ Full SPA code (HTML + JS + TailwindCSS)
-✔ IndexedDB exam manager
-✔ JSON loader and validator
-✔ Question engine + score engine
-✔ Beautiful modern UI
+Cloud sync (with Firebase)
